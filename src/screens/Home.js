@@ -1,13 +1,11 @@
 import {StyleSheet, View} from "react-native";
-import {Span} from "../components/StyledText";
-import {StatusBar} from "expo-status-bar";
 import React from "react";
+import {IssuesList} from 'src/features/issues/views/IssuesList';
 
 export default function Home() {
     return (
         <View style={styles.container}>
-            <Span>Home</Span>
-            <StatusBar style="auto" />
+            <IssuesList/>
         </View>
     );
 }

@@ -1,7 +1,10 @@
-import {createStore, combineReducers, applyMiddleware} from '@reduxjs/toolkit';
-import thunk from 'redux-thunk';
+import {configureStore} from '@reduxjs/toolkit';
+import {apiSlice} from "./features/api/apiSlice";
 
-const rootReducer = combineReducers({
+export const store = configureStore({
+    reducer: {
+        [apiSlice.reducerPath]: apiSlice.reducer
+    },
+    middleware: getDefaultMiddleware =>
+        getDefaultMiddleware().concat(apiSlice.middleware)
 })
-
-export const store = createStore(rootReducer, applyMiddleware(thunk));
