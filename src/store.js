@@ -1,10 +1,9 @@
 import {configureStore} from '@reduxjs/toolkit';
-import {apiSlice} from "./features/api/apiSlice";
+
+import issueSlice from "./features/issues/issuesSlice";
 
 export const store = configureStore({
     reducer: {
-        [apiSlice.reducerPath]: apiSlice.reducer
-    },
-    middleware: getDefaultMiddleware =>
-        getDefaultMiddleware().concat(apiSlice.middleware)
+        issues: issueSlice
+    }
 })
