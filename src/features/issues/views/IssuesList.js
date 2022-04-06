@@ -4,24 +4,28 @@ import Moment from "moment";
 
 import {Span} from "src/components/StyledText";
 import {GetIssues} from "src/services/githubService";
+import SearchField from "./issuesSearch";
 
 export default ({navigation}) => {
     const [page, setPage] = useState(1);
     const [issues, setIssues] = useState([]);
+    const [filteredIssues, setFilteredIssues] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isMore, setIsMore] = useState(true);
     const [error, setError] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         loadIssues()
     }, []);
 
     let loadIssues = () => {
-        if (isLoading) return;
+        if (searchQuery || isLoading || !isMore) return;
         GetIssues(page)
             .then((nextIssues) => {
                 if (nextIssues.length > 0) {
                     setIssues([...issues, ...nextIssues]);
+                    setFilteredIssues([...issues, ...nextIssues]);
                     setPage(page + 1);
                 } else {
                     setIsMore(false);
@@ -40,23 +44,42 @@ export default ({navigation}) => {
     );
 
     let listFooter = () => {
-        return (
+        return (!searchQuery &&
             <View style={styles.footer}>
                 <ActivityIndicator size="large" color="#5500dc"/>
                 {!isMore && <Span>No data to fetch</Span>}
-            </View>
-        )
+            </View>)
+    }
+
+    const handleSearch = (text) => {
+        if (text) {
+            const filteredData = issues.filter((item) => {
+                return compare(item, text);
+            });
+            setFilteredIssues(filteredData);
+        } else {
+            setFilteredIssues(issues);
+        }
+        setSearchQuery(text);
+    };
+
+    const compare = (item, text) => {
+        const title = item.title.toUpperCase();
+        const searchQuery = text.toUpperCase();
+        return title.indexOf(searchQuery) > -1;
     }
 
     return (
         <View>
-            <FlatList data={issues}
+            <SearchField query={searchQuery} handleSearch={handleSearch}/>
+
+            <FlatList data={filteredIssues} style={{marginBottom: 80}}
                       ListFooterComponent={listFooter}
                       keyExtractor={(item, index) => String(index)}
                       renderItem={issueDetails}
                       refreshing={false}
                       onEndReached={loadIssues}
-                      onEndThreshold={0.5}/>
+                      onEndThreshold={0}/>
 
             {error && <Span>Sorry, error happened while fetching issues</Span>}
         </View>
