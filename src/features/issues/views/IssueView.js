@@ -1,19 +1,19 @@
 import {StyleSheet, TextInput, View, ScrollView} from "react-native";
-import {useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import {KeyboardAvoidingView} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import {selectIssueById} from "../issuesSlice";
 import IssueDetails from "./IssueDetails";
-import {Span} from "../../../components/StyledText";
+import {Span} from "src/components/StyledText";
+import {GetIssue} from "src/services/githubService";
 
 export default ({navigation, route}) => {
     const issueId = route.params.id;
-    const issue = useSelector(state => selectIssueById(state, issueId));
+    const [issue, setIssue] = useState();
     const [comment, setComment] = useState('')
 
     useEffect(() => {
+        GetIssue(issueId).then((item) => {setIssue(item)});
         getComment().then((comment) => comment && setComment(comment));
         navigation.setOptions({
             title: `Issue #${issueId}`,
@@ -43,6 +43,7 @@ export default ({navigation, route}) => {
                     underlineColorAndroid="transparent"
                     clearButtonMode="always"
                     onChangeText={newComment => saveComment(newComment)}
+                    placeholder='Comment will be saved automatically'
                 />
             </View>
         </KeyboardAvoidingView>

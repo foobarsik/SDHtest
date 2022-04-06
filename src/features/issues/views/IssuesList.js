@@ -1,26 +1,34 @@
+import {FlatList, View, StyleSheet, Pressable, ActivityIndicator} from "react-native";
 import React, {useEffect, useState} from "react";
-import {useSelector, useDispatch} from "react-redux";
-import {FlatList, View, StyleSheet, ActivityIndicator, Pressable} from "react-native";
-import Moment from 'moment';
+import Moment from "moment";
 
-import {GetIssues} from "src/services/githubService";
 import {Span} from "src/components/StyledText";
-import {selectAllPosts} from "src/features/issues/issuesSlice";
+import {GetIssues} from "src/services/githubService";
 
 export default ({navigation}) => {
-    const dispatch = useDispatch();
-    const [page, setPage] = useState(1)
-    const {issues, isLoading, isSuccess, isMore, error} = useSelector(selectAllPosts);
+    const [page, setPage] = useState(1);
+    const [issues, setIssues] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isMore, setIsMore] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        dispatch(GetIssues())
+        loadIssues()
     }, []);
 
-    let loadMore = () => {
-        if (!isLoading && isMore) {
-            setPage(page + 1)
-            dispatch(GetIssues(page));
-        }
+    let loadIssues = () => {
+        if (isLoading) return;
+        GetIssues(page)
+            .then((nextIssues) => {
+                if (nextIssues.length > 0) {
+                    setIssues([...issues, ...nextIssues]);
+                    setPage(page + 1);
+                } else {
+                    setIsMore(false);
+                }
+            })
+            .catch(error => setError(error))
+            .finally(() => setIsLoading(false))
     }
 
     let issueDetails = ({item}) => (
@@ -31,26 +39,28 @@ export default ({navigation}) => {
         </Pressable>
     );
 
-    let content;
-
-    if (isLoading) {
-        content = <ActivityIndicator size="large"/>
-    } else if (isSuccess) {
-        content = <FlatList data={issues}
-                            renderItem={issueDetails}
-                            keyExtractor={(item, index) => String(index)}
-                            refreshing={false}
-                            onEndReached={loadMore}
-                            onEndThreshold={0}/>
-    } else if (error) {
-        content = <Span>{'Sorry, error happened while fetching issues'}</Span>
+    let listFooter = () => {
+        return (
+            <View style={styles.footer}>
+                <ActivityIndicator size="large" color="#5500dc"/>
+                {!isMore && <Span>No data to fetch</Span>}
+            </View>
+        )
     }
 
     return (
         <View>
-            {content}
+            <FlatList data={issues}
+                      ListFooterComponent={listFooter}
+                      keyExtractor={(item, index) => String(index)}
+                      renderItem={issueDetails}
+                      refreshing={false}
+                      onEndReached={loadIssues}
+                      onEndThreshold={0.5}/>
+
+            {error && <Span>Sorry, error happened while fetching issues</Span>}
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -63,5 +73,10 @@ const styles = StyleSheet.create({
     title: {
         paddingBottom: 5,
         fontSize: 20
+    },
+    footer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 });
