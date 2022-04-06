@@ -1,8 +1,8 @@
 import {View, StyleSheet} from "react-native";
+
 import {Span} from "src/components/StyledText";
 
-export default (props) => {
-    let issue = props.issue;
+export default ({issue}) => {
     return (
         <View style={styles.container}>
             <Span style={styles.title}>{issue.title}</Span>
